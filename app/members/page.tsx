@@ -1,7 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getMembers, addMember, deleteMember } from '@/app/actions/members';
+import { getMembers, addMember, deleteMember, updateMember } from '@/app/actions/members';
+import Link from 'next/link';
 
-export default async function MembersPage() {
+export default async function MembersPage({ searchParams }: { searchParams: { edit?: string } }) {
+  const searchParamsObj = await searchParams;
+  const editId = searchParamsObj?.edit;
   const members = await getMembers();
 
   return (
@@ -61,21 +64,43 @@ export default async function MembersPage() {
               <tbody>
                 {members.map((member: any) => (
                   <tr key={member.m_id}>
-                    <td className="text-slate-400">#{member.m_id}</td>
-                    <td className="font-medium text-white">{member.m_name}</td>
-                    <td className="text-slate-300">{new Date(member.m_dob).toLocaleDateString()}</td>
-                    <td className="text-slate-300">{member.m_gender}</td>
-                    <td className="text-slate-400 max-w-[150px] truncate">{member.m_info}</td>
-                    <td className="text-right space-x-2 flex justify-end">
-                      <form action={async () => {
-                        'use server';
-                        await deleteMember(member.m_id);
-                      }}>
-                        <button type="submit" className="text-red-400 hover:text-red-300 hover:bg-red-400/10 p-2 rounded transition-colors">
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        </button>
-                      </form>
-                    </td>
+                    {editId === member.m_id.toString() ? (
+                      <td colSpan={6} className="p-4 bg-slate-800/50 rounded-lg">
+                        <form action={async (formData: FormData) => {
+                          'use server';
+                          await updateMember(member.m_id, formData);
+                        }} className="flex items-center gap-2">
+                          <span className="text-slate-400 w-12 text-xs">#{member.m_id}</span>
+                          <input type="text" name="m_name" defaultValue={member.m_name} required className="w-full flex-1 text-xs" />
+                          <input type="date" name="m_dob" defaultValue={new Date(member.m_dob).toISOString().split('T')[0]} required className="w-full flex-1 text-xs" />
+                          <input type="text" name="m_gender" defaultValue={member.m_gender} maxLength={1} required className="w-16 text-xs" />
+                          <input type="text" name="m_info" defaultValue={member.m_info} className="w-full flex-1 text-xs" />
+                          <button type="submit" className="btn-primary py-1 px-3 text-xs whitespace-nowrap !bg-gradient-to-r !from-emerald-500 !to-teal-500">Save</button>
+                          <Link href="/members" className="btn-secondary py-1 px-3 text-xs whitespace-nowrap">Cancel</Link>
+                        </form>
+                      </td>
+                    ) : (
+                      <>
+                        <td className="text-slate-400">#{member.m_id}</td>
+                        <td className="font-medium text-white">{member.m_name}</td>
+                        <td className="text-slate-300">{new Date(member.m_dob).toLocaleDateString()}</td>
+                        <td className="text-slate-300">{member.m_gender}</td>
+                        <td className="text-slate-400 max-w-[150px] truncate">{member.m_info}</td>
+                        <td className="text-right space-x-2 flex justify-end">
+                          <Link href={`/members?edit=${member.m_id}`} className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-400/10 p-2 rounded transition-colors inline-flex">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                          </Link>
+                          <form action={async () => {
+                            'use server';
+                            await deleteMember(member.m_id);
+                          }}>
+                            <button type="submit" className="text-red-400 hover:text-red-300 hover:bg-red-400/10 p-2 rounded transition-colors inline-flex">
+                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
+                          </form>
+                        </td>
+                      </>
+                    )}
                   </tr>
                 ))}
               </tbody>

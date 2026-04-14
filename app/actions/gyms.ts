@@ -3,6 +3,7 @@
 
 import pool from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 
 export async function getGyms() {
   try {
@@ -41,8 +42,10 @@ export async function updateGym(g_id: number, formData: FormData) {
   
   try {
     await pool.query('UPDATE gym SET g_name = ?, g_location = ? WHERE g_id = ?', [g_name, g_location, g_id]);
-    revalidatePath('/gyms');
   } catch (error) {
     console.error('Error updating gym:', error);
+    return;
   }
+  revalidatePath('/gyms');
+  redirect('/gyms');
 }

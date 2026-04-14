@@ -3,6 +3,7 @@
 
 import pool from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 
 export async function getMembers() {
   try {
@@ -45,8 +46,10 @@ export async function updateMember(m_id: number, formData: FormData) {
   
   try {
     await pool.query('UPDATE member SET m_name = ?, m_dob = ?, m_gender = ?, m_info = ? WHERE m_id = ?', [m_name, m_dob, m_gender, m_info, m_id]);
-    revalidatePath('/members');
   } catch (error) {
     console.error('Error updating member:', error);
+    return;
   }
+  revalidatePath('/members');
+  redirect('/members');
 }
